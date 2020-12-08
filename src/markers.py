@@ -45,19 +45,35 @@ def marker_setup():
 
         
 def ee_palm():
-    ee_palm_mat = np.zeros((4, 4))
-
-    with open(directory + '/final_test/EE_to_Palm_Transform_Matrix_2.csv') as f:
+    ee_palm_tran = np.zeros((4, 4))
+    ee_palm_rot = np.zeros((4, 4))
+    
+    with open(directory + '/final_test/EE_to_Palm_Translation_Matrix.csv') as f:
         reader = csv.reader(f)
         for j, row in enumerate(reader):
             for i, col in enumerate(row):
-                ee_palm_mat[j][i] = float(col)
-
-    rot_auruco_ee = tf.transformations.euler_matrix(pi/2, pi, 0)
+                ee_palm_tran[j][i] = float(col)
     
-    ee_palm_mat = np.dot(np.linalg.inv(rot_auruco_ee), ee_palm_mat)
-    trans = tf.transformations.translation_from_matrix(ee_palm_mat)
-    rot = tf.transformations.quaternion_from_matrix(ee_palm_mat)
+    with open(directory + '/final_test/EE_to_Palm_Rotation_Matrix.csv') as f:
+        reader = csv.reader(f)
+        for j, row in enumerate(reader):
+            for i, col in enumerate(row):
+                ee_palm_rot[j][i] = float(col)
+    
+    # ee_palm_mat = np.dot(ee_palm_rot, ee_palm_tran)
+
+    rot_auruco_ee = tf.transformations.euler_matrix(-pi/2, pi, 0)
+    
+    ee_palm_mat = np.dot(ee_palm_tran,rot_auruco_ee)
+    trans = tf.transformations.translation_from_matrix(np.linalg.inv(ee_palm_mat))
+    rot = tf.transformations.quaternion_from_matrix(rot_auruco_ee)
+    rospy.logerr(trans)
+    
+    # rospy.logerr(tf.transformations.euler_from_matrix(ee_palm_rot))
+
+    ee_palm_mat = np.dot(np.linalg.inv(ee_palm_mat), rot_auruco_ee)
+    # trans = tf.transformations.translation_from_matrix(ee_palm_mat)
+    # rot = tf.transformations.quaternion_from_matrix(ee_palm_mat)
     # np.linalg.inv(
 
     return trans, rot
@@ -72,9 +88,9 @@ if __name__ == '__main__':
     trans, rot = ee_palm()
 
     markers[6].header.frame_id = 'j2s7s300_end_effector'
-    markers[6].pose.position.x = trans[0] / 100
-    markers[6].pose.position.y = trans[1] / 100
-    markers[6].pose.position.z = trans[2] / 100
+    markers[6].pose.position.x = trans[0]
+    markers[6].pose.position.y = trans[1]
+    markers[6].pose.position.z = trans[2]
     markers[6].pose.orientation.x = rot[0]
     markers[6].pose.orientation.y = rot[1]
     markers[6].pose.orientation.z = rot[2]
@@ -85,10 +101,12 @@ if __name__ == '__main__':
 
     # Set a rate.  10 Hz is a good default rate for a marker moving with the Fetch robot.
     rate = rospy.Rate(10)
-
+    palm_frame = tf.TransformBroadcaster()
     # Publish the marker at 10Hz.
     while not rospy.is_shutdown():
         for i in range(len(markers)):
             publisher.publish(markers[i])
+
+        palm_frame.sendTransform(tuple(trans), tuple(rot), rospy.Time.now(), 'palm_frame', 'j2s7s300_end_effector')
 
         rate.sleep()

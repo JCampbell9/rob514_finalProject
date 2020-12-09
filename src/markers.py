@@ -17,6 +17,9 @@ from visualization_msgs.msg import Marker
 directory = os.path.dirname(os.path.realpath(__file__))
 
 def marker_setup():
+    """sets up the corner and center markers that represent the world frame from
+    from the perspective of the arm, red markers
+    """
 
     markers = [0, 1, 2, 3, 4, 5, 6]
     poses = [[0, 0, -0.005], [0.30, 0.25, 0], [-0.30, 0.25, 0], [-0.30, -0.25, 0], [0.30, -0.25, 0], [0, 0, 0], [0, 0, 0]]
@@ -45,6 +48,8 @@ def marker_setup():
 
         
 def ee_palm():
+    """gets the transform to go from the end effector to the palm Aruco marker"""
+
     ee_palm_tran = np.zeros((4, 4))
     ee_palm_rot = np.zeros((4, 4))
     
@@ -60,6 +65,8 @@ def ee_palm():
             for i, col in enumerate(row):
                 ee_palm_rot[j][i] = float(col)
     
+#################################################################################################################
+    ###Test Stuff Ignore will be Removed Later #############
     # ee_palm_mat = np.dot(ee_palm_rot, ee_palm_tran)
 
     # rot_auruco_ee = tf.transformations.euler_matrix((-9.38*pi / 180), (-8.83*pi / 180), (0.83*pi / 180))
@@ -68,12 +75,8 @@ def ee_palm():
     
     # rot = tf.transformations.quaternion_from_euler((-9.38*pi / 180), (-8.83*pi / 180), (0.83*pi / 180))
     
-    rot = tf.transformations.quaternion_from_matrix(ee_palm_rot)
-    
     # ee_palm_mat = np.dot(ee_palm_tran, rot_auruco_ee)
-    trans = tf.transformations.translation_from_matrix(ee_palm_tran)
     # rot = tf.transformations.quaternion_from_matrix(rot_auruco_ee)
-    rospy.logerr(trans)
     
     # rospy.logerr(tf.transformations.euler_from_matrix(ee_palm_rot))
 
@@ -81,6 +84,11 @@ def ee_palm():
     # trans = tf.transformations.translation_from_matrix(ee_palm_mat)
     # rot = tf.transformations.quaternion_from_matrix(ee_palm_rot)
     # np.linalg.inv(
+#################################################################################################################
+
+    rot = tf.transformations.quaternion_from_matrix(ee_palm_rot)
+    trans = tf.transformations.translation_from_matrix(ee_palm_tran)
+    # rospy.logerr(trans)
 
     return trans, rot
 
@@ -93,7 +101,8 @@ if __name__ == '__main__':
     
     trans, rot = ee_palm()
 
-    markers[6].header.frame_id = 'aruco_endeffector'
+    # Modifies the last marker which is the palm aruco marker
+    markers[6].header.frame_id = 'aruco_endeffector'  # the end effector flipped to align with the aruco marker
     markers[6].pose.position.x = trans[0]
     markers[6].pose.position.y = trans[1]
     markers[6].pose.position.z = trans[2]
@@ -107,7 +116,7 @@ if __name__ == '__main__':
 
     # Set a rate.  10 Hz is a good default rate for a marker moving with the Fetch robot.
     rate = rospy.Rate(10)
-    palm_frame = tf.TransformBroadcaster()
+    palm_frame = tf.TransformBroadcaster()  # adds the palm to the tf 
     # Publish the marker at 10Hz.
     while not rospy.is_shutdown():
         for i in range(len(markers)):

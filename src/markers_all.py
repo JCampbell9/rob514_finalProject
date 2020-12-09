@@ -15,12 +15,11 @@ from visualization_msgs.msg import Marker
 
 
 class Markers:
-    """"""
+    """ Places the aruco markers as seen by the overhead web camera"""
 
     def __init__(self):
 
-        self.dir_path = os.path.dirname(os.path.realpath(__file__))
-        # self.arm_pub = rospy.Publisher('arm_markers', Marker, queue_size=10)
+        self.dir_path = os.path.dirname(os.path.realpath(__file__)) # current directory
         self.camera_pub = rospy.Publisher('camera_markers', Marker, queue_size=10)
 
         # self.arm_marker()
@@ -28,7 +27,7 @@ class Markers:
         self.marker_names = []
         self.markers = []
 
-        self.file_number = rospy.get_param('file_number')
+        self.file_number = rospy.get_param('file_number') # paramater set in launch file
 
         self.camera_marker()
 
@@ -37,7 +36,7 @@ class Markers:
         # Publish the marker at 10Hz.
         while not rospy.is_shutdown():
             file_num = rospy.get_param('file_number')
-            if file_num != self.file_number:
+            if file_num != self.file_number:  # checks to see if the parameter has changed and if so updates markers pose
                 self.file_number = file_num
                 self.camera_marker()
 
@@ -60,6 +59,9 @@ class Markers:
         
 
     def marker_setup(self):
+        """"  
+        Sets up the markers which are the same size
+        """
         
         self.markers[:] = self.marker_names[:]
         for i in range(len(self.markers)):
@@ -70,13 +72,13 @@ class Markers:
             self.markers[i].type = self.markers[i].CUBE
             self.markers[i].id = i
             self.markers[i].action = self.markers[i].ADD
-            self.markers[i].scale.x = 0.036
+            self.markers[i].scale.x = 0.036  # Markers are 3.6cm square
             self.markers[i].scale.y = 0.036
             self.markers[i].scale.z = 0.01
 
             self.markers[i].color.r = 0
             self.markers[i].color.g = 0
-            self.markers[i].color.b = 1
+            self.markers[i].color.b = 1  # blue is camera frame
             self.markers[i].color.a = 1
 
             pose = self.marker_dict[self.marker_names[i]]
@@ -92,6 +94,9 @@ class Markers:
             self.markers[i].pose.orientation.w = quan[3]
 
     def readfile(self):
+        """Reads in a csv file marked with the file_number that has multiple aruco markers' pose and orientation
+        first column has the name for the marker and the first row states the order
+        """
 
         with open(self.dir_path + '/final_test/data_file_' + self.file_number + '.csv') as f:
             reader = csv.reader(f)
@@ -101,6 +106,7 @@ class Markers:
                 for i in range(1, len(row)):
                     data_list.append(float(row[i]))
 
+                # stores the files in a dictionary and a list
                 self.marker_names.append(str(row[0]))
                 self.marker_dict[str(row[0])] = data_list
 

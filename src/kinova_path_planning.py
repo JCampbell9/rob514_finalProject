@@ -5,7 +5,8 @@
 # Date: 1/30/20
 #
 # Modified By: Josh Campbell
-# Date: 12/8/2020
+# Date: 12/9/2020
+# Edits to main to allow a service call to give joint angles
 ########################################################################################################################
 
 
@@ -154,6 +155,7 @@ class MoveRobot():
 		self.disp_pub.publish(self.disp)
 
 	def joint_angles(self, request):
+		"""calls the main() function giving it the desired joint angles"""
 		self.main(request.angles)
 
 		return Joint_anglesResponse(True)
@@ -167,11 +169,8 @@ class MoveRobot():
 
 		# Draw a straight line in 90 deg
 		rospy.loginfo('moving')
-		joint_radians = angles[:7]
-		finger_radians = angles[7:]
-		# rospy.logerr(finger_radians)
-
-		# [6.92, 2.58, -0.86, 4.67, 5.59, 3.73, 6.97]
+		joint_radians = angles[:7]  # angles for the arm
+		finger_radians = angles[7:] # angles for the gripper this code currently doesn't work
 
 		self.go_to_joint_state(joint_radians)
 		# self.move_gripper(angles)

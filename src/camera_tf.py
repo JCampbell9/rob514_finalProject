@@ -15,6 +15,11 @@ import sys
 
 
 if __name__ == '__main__':
+
+    ###################################################################################
+    # Creates the camera, world, and the aruco_end_effector frames to TF to be used later 
+    ###################################################################################
+
     rospy.init_node('camera_frame_tf')
 
     directory = os.path.dirname(os.path.realpath(__file__))
@@ -23,6 +28,7 @@ if __name__ == '__main__':
     translation_mat = np.zeros((4, 4))
     rotation_mat = np.zeros((4, 4))
 
+    # reads in transforms for the frames
     with open(directory + '/final_test/TranslationMatrix.csv') as f:
         reader = csv.reader(f)
         for j, row in enumerate(reader):
@@ -45,23 +51,25 @@ if __name__ == '__main__':
 
     camera_transform = np.dot(camera_mat, np.dot(translation_mat, rotation_mat))
     camera_transform = np.linalg.inv(camera_transform)
+    
     transform = np.dot(rotation_mat, translation_mat)
     transform = np.linalg.inv(transform)
-    trans = tf.transformations.translation_from_matrix(transform)
-    # trans = tf.transformations.translation_from_matrix(np.linalg.inv(translation_mat))
-    # print(trans)
-    rot = tf.transformations.quaternion_from_matrix(transform)
-    # rot = tf.transformations.quaternion_from_matrix(np.linalg.inv(rotation_mat))
-    # print(rot)
     
+    # setting up the world frame
+    trans = tf.transformations.translation_from_matrix(transform)
+    rot = tf.transformations.quaternion_from_matrix(transform)
+    
+    # setting up the camera frame
     trans2 = tf.transformations.translation_from_matrix(camera_transform)
     rot2 = tf.transformations.quaternion_from_matrix(camera_transform)
     
+    # setting up the aruco_end_effector frame which is fixed and known
+    trans3 = (0, 0, 0)
+    rot3 = tf.transformations.quaternion_from_euler(-pi/2, pi, 0)
+
     br = tf.TransformBroadcaster()
     camera_world = tf.TransformBroadcaster()
     aruco_ee = tf.TransformBroadcaster()
-    trans3 = (0, 0, 0)
-    rot3 = tf.transformations.quaternion_from_euler(-pi/2, pi, 0)
 
     rate = rospy.Rate(10.0)
 

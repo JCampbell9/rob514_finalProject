@@ -14,11 +14,15 @@ from kinova_scripts.srv import Joint_angles
 
 
 if __name__ == '__main__':
+    ##########################################################################################
+    # Reads the joint angles and sends them to the plannar to create
+    ##########################################################################################
 
-    try:
+    try:  # get input from command line for which file to use
 	    n = sys.argv[1]
     except:
 	    n = 6
+
 
     rospy.init_node('joint_angles', argv=sys.argv, disable_signals=True)
 
@@ -26,8 +30,10 @@ if __name__ == '__main__':
 
     angles = np.zeros((1,13))
 
+    # set the file number parameter so other programs update
     rospy.set_param('file_number', str(n))
 
+    # get angles
     with open(directory + '/final_test/test_data/Matrices/Angles_' + str(n) +'.0.csv') as f:
         reader = csv.reader(f)
         for j, row in enumerate(reader):
@@ -40,6 +46,7 @@ if __name__ == '__main__':
 
     set_angles = rospy.ServiceProxy('joint_angles', Joint_angles)
 
+    # send the angles to the plannar to move the arm
     try:
         answer = set_angles(arm_angles)
     except rospy.ServiceException as e:

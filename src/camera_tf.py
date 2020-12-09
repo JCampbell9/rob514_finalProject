@@ -6,6 +6,7 @@ import rospy
 import tf
 import os
 import numpy as np
+from math import pi
 import csv
 import glob
 import sys
@@ -58,12 +59,16 @@ if __name__ == '__main__':
     
     br = tf.TransformBroadcaster()
     camera_world = tf.TransformBroadcaster()
+    aruco_ee = tf.TransformBroadcaster()
+    trans3 = (0, 0, 0)
+    rot3 = tf.transformations.quaternion_from_euler(-pi/2, pi, 0)
 
     rate = rospy.Rate(10.0)
 
     while not rospy.is_shutdown():
         br.sendTransform(tuple(trans), tuple(rot), rospy.Time.now(), 'world_frame', 'j2s7s300_link_base') # j2s7s300_end_effector
         camera_world.sendTransform(tuple(trans2), tuple(rot2), rospy.Time.now(), 'camera_frame', 'j2s7s300_link_base')
+        aruco_ee.sendTransform(trans3, tuple(rot3), rospy.Time.now(), 'aruco_endeffector', 'j2s7s300_end_effector')
         rate.sleep()
 
 

@@ -62,18 +62,24 @@ def ee_palm():
     
     # ee_palm_mat = np.dot(ee_palm_rot, ee_palm_tran)
 
-    rot_auruco_ee = tf.transformations.euler_matrix(-pi/2, pi, 0)
+    # rot_auruco_ee = tf.transformations.euler_matrix((-9.38*pi / 180), (-8.83*pi / 180), (0.83*pi / 180))
+    # rot_auruco_ee = tf.transformations.euler_matrix(0, 0, 0)
+    # rospy.logerr(rot_auruco_ee)
     
-    ee_palm_mat = np.dot(ee_palm_tran,rot_auruco_ee)
-    trans = tf.transformations.translation_from_matrix(np.linalg.inv(ee_palm_mat))
-    rot = tf.transformations.quaternion_from_matrix(rot_auruco_ee)
+    # rot = tf.transformations.quaternion_from_euler((-9.38*pi / 180), (-8.83*pi / 180), (0.83*pi / 180))
+    
+    rot = tf.transformations.quaternion_from_matrix(ee_palm_rot)
+    
+    # ee_palm_mat = np.dot(ee_palm_tran, rot_auruco_ee)
+    trans = tf.transformations.translation_from_matrix(ee_palm_tran)
+    # rot = tf.transformations.quaternion_from_matrix(rot_auruco_ee)
     rospy.logerr(trans)
     
     # rospy.logerr(tf.transformations.euler_from_matrix(ee_palm_rot))
 
-    ee_palm_mat = np.dot(np.linalg.inv(ee_palm_mat), rot_auruco_ee)
+    # ee_palm_mat = np.dot(np.linalg.inv(ee_palm_mat), rot_auruco_ee)
     # trans = tf.transformations.translation_from_matrix(ee_palm_mat)
-    # rot = tf.transformations.quaternion_from_matrix(ee_palm_mat)
+    # rot = tf.transformations.quaternion_from_matrix(ee_palm_rot)
     # np.linalg.inv(
 
     return trans, rot
@@ -87,7 +93,7 @@ if __name__ == '__main__':
     
     trans, rot = ee_palm()
 
-    markers[6].header.frame_id = 'j2s7s300_end_effector'
+    markers[6].header.frame_id = 'aruco_endeffector'
     markers[6].pose.position.x = trans[0]
     markers[6].pose.position.y = trans[1]
     markers[6].pose.position.z = trans[2]
@@ -107,6 +113,6 @@ if __name__ == '__main__':
         for i in range(len(markers)):
             publisher.publish(markers[i])
 
-        palm_frame.sendTransform(tuple(trans), tuple(rot), rospy.Time.now(), 'palm_frame', 'j2s7s300_end_effector')
+        palm_frame.sendTransform(tuple(trans), tuple(rot), rospy.Time.now(), 'palm_frame', 'aruco_endeffector')
 
         rate.sleep()

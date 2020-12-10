@@ -34,6 +34,7 @@ if __name__ == '__main__':
     rospy.set_param('file_number', str(n))
 
     # get angles
+    # with open(directory + '/final_test/test_data/Matrices/Angles_Optimized.0.csv') as f:  # '/final_test/test_data/Matrices/Angles_' + str(n) +'.0.csv'
     with open(directory + '/final_test/test_data/Matrices/Angles_' + str(n) +'.0.csv') as f:
         reader = csv.reader(f)
         for j, row in enumerate(reader):
@@ -41,7 +42,7 @@ if __name__ == '__main__':
                 angles[j][i] = float(col)
 
     arm_angles = angles[0]
-
+    print(arm_angles)
     rospy.wait_for_service('joint_angles')
 
     set_angles = rospy.ServiceProxy('joint_angles', Joint_angles)

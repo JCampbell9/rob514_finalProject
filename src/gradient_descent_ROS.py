@@ -1,16 +1,20 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+
 
 import rospy
+
 import tf
 import numpy as np
 import csv
 import sys
 import os
 from numpy import sin, cos, pi
-import pylab as plt
 
-import arm_calibration
-from endEffector_to_world import get_ee_world_location
+# import pylab as plt
+
+# import arm_calibration
+# from endEffector_to_world import get_ee_world_location
+from kinova_scripts.srv import Joint_angles
 
 print("\nERROR CALCULATION...")
 
@@ -22,6 +26,8 @@ class RobotArm:
 
         self.listener = tf.TransformListener()
 
+        rospy.wait_for_service('joint_angles')
+        self.update_angles = rospy.ServiceProxy('joint_angles', Joint_angles)
 
         self.joint_angles = {}
         self.joint_lengths = {"joint1": 0, "joint2": 0.2755, "joint3": 0.205, "joint4": 0.205, "joint5": 0.2073,
@@ -114,11 +120,19 @@ class RobotArm:
 
         # Send current joint values to ROS (read in or send directly)
         # function_call(self.joint_angles)
+        arm_angles = []
+        for i in range(self.joint_names):
+            arm_angles.append(self.joint_angles[i]))
+
+        try:
+        answer = self.update_angles(arm_angles)
+    except rospy.ServiceException as e:
+        rospy.logwarn('Service call failed for: {0}'.format(e))
 
 
          while True:
         try:
-            translation, rotation = self.listener.lookupTransform('j2s7s300_link_base', 'ee_frame_camera_flipped change to normal end effector', rospy.Time())
+            translation, rotation = self.listener.lookupTransform('world_frame', 'j2s7s300_end_effector', rospy.Time())
             break  # once the transform is obtained move on
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             continue  # if it fails try again
@@ -266,3 +280,5 @@ if __name__ = '__main__':
     print("After, Joint angles: ", robot.joint_angles.items())
 
     print("Done :)")
+
+    rospy.spin()

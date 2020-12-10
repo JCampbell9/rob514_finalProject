@@ -1,3 +1,7 @@
+#! /usr/bin/env python
+
+import rospy
+import tf
 import numpy as np
 import csv
 import sys
@@ -15,6 +19,9 @@ directory = os.path.dirname(os.path.realpath(__file__))
 
 class RobotArm:
     def __init__(self):
+
+        self.listener = tf.TransformListener()
+
 
         self.joint_angles = {}
         self.joint_lengths = {"joint1": 0, "joint2": 0.2755, "joint3": 0.205, "joint4": 0.205, "joint5": 0.2073,
@@ -107,6 +114,18 @@ class RobotArm:
 
         # Send current joint values to ROS (read in or send directly)
         # function_call(self.joint_angles)
+
+
+         while True:
+        try:
+            translation, rotation = self.listener.lookupTransform('j2s7s300_link_base', 'ee_frame_camera_flipped change to normal end effector', rospy.Time())
+            break  # once the transform is obtained move on
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+            continue  # if it fails try again
+
+        endpoint[0][-1] = translation[0]
+        endpoint[1][-1] = translation[1]
+        endpoint[2][-1] = translation[2]
 
         # Get end point location from ROS
         # endpoint = function_call()
@@ -223,24 +242,27 @@ class RobotArm:
         print("Saving new joint angles at ", save_file)
         self.save_new_joint_angles(save_file)
 
+if __name__ = '__main__':
 
-print("GRADIENT DESCENT...")
-robot = RobotArm()
+    rospy.init_node('gradient_descent')
 
-before_endpoint = robot.get_arm_endpoint()
-robot.reach_gradient()
-after_endpoint = robot.get_arm_endpoint()
+    print("GRADIENT DESCENT...")
+    robot = RobotArm()
 
-#print("Before ENDPOINT: ", before_endpoint)
-#print("After ENDPOINT: ", after_endpoint)
-#print("target ENDPOINT: ", robot.target_endpoint)
+    before_endpoint = robot.get_arm_endpoint()
+    robot.reach_gradient()
+    after_endpoint = robot.get_arm_endpoint()
 
-print("Before cost: ", robot.cost(before_endpoint))
-print("After cost: ", robot.cost(after_endpoint))
+    #print("Before ENDPOINT: ", before_endpoint)
+    #print("After ENDPOINT: ", after_endpoint)
+    #print("target ENDPOINT: ", robot.target_endpoint)
 
-# Plot cost over time from Gradient Descent algorithm
-#robot.plot_cost()
+    print("Before cost: ", robot.cost(before_endpoint))
+    print("After cost: ", robot.cost(after_endpoint))
 
-print("After, Joint angles: ", robot.joint_angles.items())
+    # Plot cost over time from Gradient Descent algorithm
+    #robot.plot_cost()
 
-print("Done :)")
+    print("After, Joint angles: ", robot.joint_angles.items())
+
+    print("Done :)")

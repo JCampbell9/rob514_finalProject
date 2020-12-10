@@ -11,6 +11,6 @@
     
     <node pkg="kinova_scripts" name="move_kinova" type="kinova_path_planning.py" />
 
-    <param name="file_number" type="string" value="6" />
+    <param name="file_number" type="string" value="9" />
 
 </launch>

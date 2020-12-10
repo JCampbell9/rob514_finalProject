@@ -34,8 +34,8 @@ if __name__ == '__main__':
     rospy.set_param('file_number', str(n))
 
     # get angles
-    with open(directory + '/final_test/test_data/Matrices/Angles_Optimized.2.csv') as f:  # '/final_test/test_data/Matrices/Angles_' + str(n) +'.0.csv'
-    # with open(directory + '/final_test/test_data/Matrices/Angles_' + str(n) +'.0.csv') as f:
+    # with open(directory + '/final_test/test_data/Matrices/Angles_Optimized.2.csv') as f:  # '/final_test/test_data/Matrices/Angles_' + str(n) +'.0.csv'
+    with open(directory + '/final_test/test_data/Matrices/Angles_' + str(n) +'.0.csv') as f:
         reader = csv.reader(f)
         for j, row in enumerate(reader):
             for i, col in enumerate(row):

@@ -89,9 +89,11 @@ def ee_palm():
 
     rot = tf.transformations.quaternion_from_matrix(np.linalg.inv(ee_palm))
     trans = tf.transformations.translation_from_matrix(np.linalg.inv(ee_palm))
-    rospy.logerr(trans)
+    rot_ee = tf.transformations.quaternion_from_matrix(ee_palm)
+    trans_ee = tf.transformations.translation_from_matrix(ee_palm)
+    # rospy.logerr(trans)
 
-    return trans, rot
+    return trans, rot, trans_ee, rot_ee
 
 
 if __name__ == '__main__':
@@ -100,7 +102,7 @@ if __name__ == '__main__':
 
     markers = marker_setup()
     
-    trans, rot = ee_palm()
+    trans, rot, trans_ee, rot_ee = ee_palm()
 
     # Modifies the last marker which is the palm aruco marker
     markers[6].header.frame_id = 'aruco_endeffector'  # the end effector flipped to align with the aruco marker
@@ -118,11 +120,15 @@ if __name__ == '__main__':
     # Set a rate.  10 Hz is a good default rate for a marker moving with the Fetch robot.
     rate = rospy.Rate(10)
     palm_frame = tf.TransformBroadcaster()  # adds the palm to the tf 
+    ee_frame_camera = tf.TransformBroadcaster()
+    ee_frame_camera_flipped = tf.TransformBroadcaster()
+    quan = tf.transformations.quaternion_from_euler(-pi/2, pi, 0)
     # Publish the marker at 10Hz.
     while not rospy.is_shutdown():
         for i in range(len(markers)):
             publisher.publish(markers[i])
 
+        ee_frame_camera.sendTransform(tuple(trans_ee), tuple(rot_ee), rospy.Time.now(), 'ee_frame_camera', 'palm_frame_camera')
         palm_frame.sendTransform(tuple(trans), tuple(rot), rospy.Time.now(), 'palm_frame', 'aruco_endeffector')
-
+        ee_frame_camera_flipped.sendTransform((0, 0, 0), tuple(quan), rospy.Time.now(), 'ee_frame_camera_flipped', 'ee_frame_camera')
         rate.sleep()

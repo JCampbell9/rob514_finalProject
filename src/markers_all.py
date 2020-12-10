@@ -27,6 +27,10 @@ class Markers:
         self.marker_names = []
         self.markers = []
 
+        self.palm_frame_camera = tf.TransformBroadcaster()
+        self.palm_frame_trans = []
+        self.palm_frame_quan = []
+
         self.file_number = rospy.get_param('file_number') # paramater set in launch file
 
         self.camera_marker()
@@ -39,6 +43,8 @@ class Markers:
             if file_num != self.file_number:  # checks to see if the parameter has changed and if so updates markers pose
                 self.file_number = file_num
                 self.camera_marker()
+            
+            self.palm_frame_camera.sendTransform(tuple(self.palm_frame_trans), tuple(self.palm_frame_quan), rospy.Time.now(), 'palm_frame_camera', '/world_frame')
 
             for i in range(len(self.markers)):
                 self.camera_pub.publish(self.markers[i])
@@ -92,6 +98,11 @@ class Markers:
             self.markers[i].pose.orientation.y = quan[1]
             self.markers[i].pose.orientation.z = quan[2]
             self.markers[i].pose.orientation.w = quan[3]
+            
+
+            if self.marker_names[i] == 'palm':
+                self.palm_frame_trans = pose[:3]
+                self.palm_frame_quan = quan
 
     def readfile(self):
         """Reads in a csv file marked with the file_number that has multiple aruco markers' pose and orientation

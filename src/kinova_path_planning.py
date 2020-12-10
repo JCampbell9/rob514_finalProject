@@ -30,6 +30,7 @@ from moveit_msgs.msg import RobotState, PlanningScene, PlanningSceneComponents, 
 from moveit_msgs.srv import GetPlanningScene, ApplyPlanningScene
 
 from kinova_scripts.srv import Joint_angles, Joint_anglesResponse
+from kinova_scripts.srv import New_pose, New_poseResponse
 import time
 
 
@@ -78,6 +79,7 @@ class MoveRobot():
 		self.move_group.allow_replanning(1)
 
 		self.joint_angles_service = rospy.Service('joint_angles', Joint_angles, self.joint_angles)
+		self.new_pose_service = rospy.Service('new_pose', New_pose, self.new_pose)
 
 		# self.main()
 	
@@ -108,6 +110,8 @@ class MoveRobot():
 		pose_goal.position.x = ee_pose[0]
 		pose_goal.position.y = ee_pose[1]
 		pose_goal.position.z = ee_pose[2]
+
+		rospy.logerr(len(ee_pose))
 		
 		if len(ee_pose) == 6:
 			quat = tf.transformations.quaternion_from_euler(math.radians(ee_pose[3]), math.radians(ee_pose[4]), math.radians(ee_pose[5]))
@@ -154,25 +158,37 @@ class MoveRobot():
 		print(self.disp.trajectory)
 		self.disp_pub.publish(self.disp)
 
+	def new_pose(self, request):
+		self.main(0, request.pose)
+		
+		return New_poseResponse(True)
+
+
 	def joint_angles(self, request):
 		"""calls the main() function giving it the desired joint angles"""
-		self.main(request.angles)
+		self.main(1, request.angles)
 
 		return Joint_anglesResponse(True)
 
-	def main(self, angles):
+	def main(self, trig, goal):
 
 		# Set up path here
 
 		# Pick planner 
 		self.set_planner_type("RRT")
 
+		if trig == 1:
 		# Draw a straight line in 90 deg
-		rospy.loginfo('moving')
-		joint_radians = angles[:7]  # angles for the arm
-		finger_radians = angles[7:] # angles for the gripper this code currently doesn't work
+			rospy.loginfo('moving')
+			joint_radians = goal[:7]  # angles for the arm
+			finger_radians = goal[7:] # angles for the gripper this code currently doesn't work
 
-		self.go_to_joint_state(joint_radians)
+			self.go_to_joint_state(joint_radians)
+		
+		elif trig == 0:
+			self.go_to_goal(list(goal))
+
+
 		# self.move_gripper(angles)
 
 		# rospy.loginfo('Going to first point')

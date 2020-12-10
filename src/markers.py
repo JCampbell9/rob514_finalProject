@@ -50,14 +50,15 @@ def marker_setup():
 def ee_palm():
     """gets the transform to go from the end effector to the palm Aruco marker"""
 
+    ee_palm = np.zeros((4, 4))
     ee_palm_tran = np.zeros((4, 4))
     ee_palm_rot = np.zeros((4, 4))
     
-    with open(directory + '/final_test/EE_to_Palm_Translation_Matrix.csv') as f:
+    with open(directory + '/final_test/EE_to_Palm.csv') as f:
         reader = csv.reader(f)
         for j, row in enumerate(reader):
             for i, col in enumerate(row):
-                ee_palm_tran[j][i] = float(col)
+                ee_palm[j][i] = float(col)
     
     with open(directory + '/final_test/EE_to_Palm_Rotation_Matrix.csv') as f:
         reader = csv.reader(f)
@@ -86,9 +87,9 @@ def ee_palm():
     # np.linalg.inv(
 #################################################################################################################
 
-    rot = tf.transformations.quaternion_from_matrix(ee_palm_rot)
-    trans = tf.transformations.translation_from_matrix(ee_palm_tran)
-    # rospy.logerr(trans)
+    rot = tf.transformations.quaternion_from_matrix(np.linalg.inv(ee_palm))
+    trans = tf.transformations.translation_from_matrix(np.linalg.inv(ee_palm))
+    rospy.logerr(trans)
 
     return trans, rot
 

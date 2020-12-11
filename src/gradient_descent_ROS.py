@@ -1,12 +1,23 @@
+#! /usr/bin/env python
+
+import rospy
+import tf
 import numpy as np
 import csv
 import os
 import pylab as plt
 
+from kinova_scripts.srv import Joint_angles
+
 directory = os.path.dirname(os.path.realpath(__file__))
 
 class RobotArm:
     def __init__(self):
+        
+        self.listener = tf.TransformListener()
+
+        rospy.wait_for_service('joint_angles')
+        self.update_arm_angles = rospy.ServiceProxy('joint_angles', Joint_angles)
 
         self.joint_angles = {}
         self.joint_lengths = {"joint1": 0, "joint2": 0.2755, "joint3": 0.205, "joint4": 0.205, "joint5": 0.2073,
@@ -40,7 +51,7 @@ class RobotArm:
     def get_joint_angles_from_physical_data(self):
         """ Gets the joint angles saved within arm_cal/ with the physical robot arm data """
         print("\nGetting the physical arm joint angles...")
-        with open(directory + '/test_data/Matrices/Angles_9.0.csv') as file:
+        with open(directory + '/final_test/test_data/Matrices/Angles_9.0.csv') as file:
             joint_data = csv.reader(file)
             idx = 0
             for row in joint_data:
@@ -92,14 +103,42 @@ class RobotArm:
     def get_current_ee_pose(self):
         """ Get current physical end effector location """
         #self.arm_endpoint = #magic tf call that I can add
+        while True:
+            try:
+                translation, rotation = self.listener.lookupTransform('world_frame', 'j2s7s300_end_effector', rospy.Time())
+                break  # once the transform is obtained move on
+            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                continue  # if it fails try again
+        point = [translation[0], translation[1], translation[2]]
+        self.arm_endpoint = np.array(point)
+
+
+
 
     def get_goal_ee_pose(self):
         """ Get target end effector location based on arUco markers """
         #self.target_endpoint = #magic tf call that I can add ie the pose of the palm from camera aruco detection
+        while True:
+            try:
+                translation, rotation = self.listener.lookupTransform('world_frame', 'ee_frame_camera_flipped', rospy.Time())
+                break  # once the transform is obtained move on
+            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                continue  # if it fails try again
+        point = [translation[0], translation[1], translation[2]]
+        self.target_endpoint = np.array(point)
+
 
     def update_angles(self):
         """ Update joint angle values within ROS """
-        joint_values = self.joint_angles.values()
+        joint_values = []
+        for i in self.joint_names:
+            joint_values.append(self.joint_angles[i])
+        
+        try:
+            answer = self.update_arm_angles(joint_values)
+        except rospy.ServiceException as e:
+            rospy.logwarn('Service call failed for: {0}'.format(e))
+
         #service_call = # self.update_joints(joint_values)
 
     def cost(self, curr_xy):
@@ -224,6 +263,8 @@ class RobotArm:
         self.save_new_joint_angles(save_file)
 
 if __name__ == '__main__':
+    rospy.init_node('gradient_descent')
+
     print("GRADIENT DESCENT...")
     robot = RobotArm()
 
@@ -247,3 +288,5 @@ if __name__ == '__main__':
     # Plot cost over time from Gradient Descent algorithm
     print("After, Joint angles: ", robot.joint_angles.items())
     print("Done :)")
+
+    rospy.spin()

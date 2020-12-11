@@ -129,7 +129,7 @@ class RobotArm:
         except rospy.ServiceException as e:
             rospy.logwarn('Service call failed for: {0}'.format(e))
 
-
+        print('made it !!!!!!!!!!!!!!!!!!')
         while True:
             try:
                 translation, rotation = self.listener.lookupTransform('world_frame', 'j2s7s300_end_effector', rospy.Time())
@@ -262,8 +262,8 @@ if __name__ == '__main__':
 
     print("GRADIENT DESCENT...")
     robot = RobotArm()
-    print("Before cost: ", robot.cost(before_endpoint))
-    print("After cost: ", robot.cost(after_endpoint))
+    # print("Before cost: ", robot.cost(before_endpoint))
+    # print("After cost: ", robot.cost(after_endpoint))
 
     # Plot cost over time from Gradient Descent algorithm
     #robot.plot_cost()

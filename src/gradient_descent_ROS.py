@@ -105,12 +105,13 @@ class RobotArm:
         #self.arm_endpoint = #magic tf call that I can add
         while True:
             try:
-                translation, rotation = self.listener.lookupTransform('world_frame', 'j2s7s300_end_effector', rospy.Time())
+                translation, rotation = self.listener.lookupTransform('world_frame', 'palm_frame', rospy.Time()) #j2s7s300_end_effector
                 break  # once the transform is obtained move on
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue  # if it fails try again
         point = [translation[0], translation[1], translation[2]]
         self.arm_endpoint = np.array(point)
+        # rospy.logerr(self.arm_endpoint)
 
 
 
@@ -120,12 +121,13 @@ class RobotArm:
         #self.target_endpoint = #magic tf call that I can add ie the pose of the palm from camera aruco detection
         while True:
             try:
-                translation, rotation = self.listener.lookupTransform('world_frame', 'ee_frame_camera_flipped', rospy.Time())
+                translation, rotation = self.listener.lookupTransform('world_frame', 'palm_frame_camera', rospy.Time()) # ee_frame_camera_flipped
                 break  # once the transform is obtained move on
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue  # if it fails try again
         point = [translation[0], translation[1], translation[2]]
         self.target_endpoint = np.array(point)
+        # rospy.logerr(self.target_endpoint)
 
 
     def update_angles(self):
@@ -147,7 +149,10 @@ class RobotArm:
         :param curr_xy: Current endpoint of arm
         :return: dist: Distance between current endpoint and target point
         """
-        dist = np.linalg.norm(curr_xy - self.target_endpoint[0:1])
+        dist = np.linalg.norm(curr_xy - self.target_endpoint)
+        rospy.logerr(self.target_endpoint)
+        rospy.logerr(curr_xy)
+        rospy.logerr(dist)
         return dist
 
     def gradient(self, joint_key):
@@ -180,7 +185,7 @@ class RobotArm:
         while_loop_counter = 0
         max_steps = 100
         old_total_cost = 10
-        epsilon = 0.05
+        epsilon = 0.005
 
         # While moved closer and not reached minimum step size
         while moved_closer and step_size > min_step_size:
@@ -287,6 +292,7 @@ if __name__ == '__main__':
 
     # Plot cost over time from Gradient Descent algorithm
     print("After, Joint angles: ", robot.joint_angles.items())
+    robot.plot_cost()
     print("Done :)")
 
     rospy.spin()

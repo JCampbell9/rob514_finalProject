@@ -13,7 +13,7 @@ from numpy import sin, cos, pi
 # import pylab as plt
 
 # import arm_calibration
-# from endEffector_to_world import get_ee_world_location
+from endEffector_to_world import get_ee_world_location
 from kinova_scripts.srv import Joint_angles
 
 print("\nERROR CALCULATION...")
@@ -58,7 +58,7 @@ class RobotArm:
     def get_joint_angles_from_physical_data(self):
         """ Gets the joint angles saved within arm_cal/ with the physical robot arm data """
         print("\nGetting the physical arm joint angles...")
-        with open(directory + '/test_data/Matrices/Angles_9.0.csv', newline='') as file:
+        with open(directory + '/final_test/test_data/Matrices/Angles_9.0.csv') as file:
             joint_data = csv.reader(file)
             idx = 0
             for row in joint_data:
@@ -76,13 +76,13 @@ class RobotArm:
         translation_mat = np.zeros((4, 4))
         rotation_mat = np.zeros((4, 4))
 
-        with open(directory + '/EE_to_Palm_Translation_Matrix.csv', newline='') as f:
+        with open(directory + '/EE_to_Palm_Translation_Matrix.csv') as f:
             reader = csv.reader(f)
             for j, row in enumerate(reader):
                 for i, col in enumerate(row):
                     translation_mat[j][i] = float(col)
 
-        with open(directory + '/EE_to_Palm_Rotation_Matrix.csv', newline='') as f:
+        with open(directory + '/EE_to_Palm_Rotation_Matrix.csv') as f:
             reader = csv.reader(f)
             for j, row in enumerate(reader):
                 for i, col in enumerate(row):
@@ -92,7 +92,7 @@ class RobotArm:
 
     def save_new_joint_angles(self,save_file):
         """ Save joint angle values to csv file """
-        with open(directory + save_file, "w", newline="") as outfile:
+        with open(directory + save_file, "w") as outfile:
             writer = csv.writer(outfile)
             writer.writerow(robot.joint_angles.values())
             outfile.close()
@@ -122,24 +122,24 @@ class RobotArm:
         # function_call(self.joint_angles)
         arm_angles = []
         for i in range(self.joint_names):
-            arm_angles.append(self.joint_angles[i]))
+            arm_angles.append(self.joint_angles[i])
 
         try:
-        answer = self.update_angles(arm_angles)
-    except rospy.ServiceException as e:
-        rospy.logwarn('Service call failed for: {0}'.format(e))
+            answer = self.update_angles(arm_angles)
+        except rospy.ServiceException as e:
+            rospy.logwarn('Service call failed for: {0}'.format(e))
 
 
-         while True:
-        try:
-            translation, rotation = self.listener.lookupTransform('world_frame', 'j2s7s300_end_effector', rospy.Time())
-            break  # once the transform is obtained move on
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            continue  # if it fails try again
+        while True:
+            try:
+                translation, rotation = self.listener.lookupTransform('world_frame', 'j2s7s300_end_effector', rospy.Time())
+                break  # once the transform is obtained move on
+            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                continue  # if it fails try again
 
-        endpoint[0][-1] = translation[0]
-        endpoint[1][-1] = translation[1]
-        endpoint[2][-1] = translation[2]
+            endpoint[0][-1] = translation[0]
+            endpoint[1][-1] = translation[1]
+            endpoint[2][-1] = translation[2]
 
         # Get end point location from ROS
         # endpoint = function_call()
@@ -256,21 +256,12 @@ class RobotArm:
         print("Saving new joint angles at ", save_file)
         self.save_new_joint_angles(save_file)
 
-if __name__ = '__main__':
+if __name__ == '__main__':
 
     rospy.init_node('gradient_descent')
 
     print("GRADIENT DESCENT...")
     robot = RobotArm()
-
-    before_endpoint = robot.get_arm_endpoint()
-    robot.reach_gradient()
-    after_endpoint = robot.get_arm_endpoint()
-
-    #print("Before ENDPOINT: ", before_endpoint)
-    #print("After ENDPOINT: ", after_endpoint)
-    #print("target ENDPOINT: ", robot.target_endpoint)
-
     print("Before cost: ", robot.cost(before_endpoint))
     print("After cost: ", robot.cost(after_endpoint))
 
@@ -280,5 +271,6 @@ if __name__ = '__main__':
     print("After, Joint angles: ", robot.joint_angles.items())
 
     print("Done :)")
+
 
     rospy.spin()

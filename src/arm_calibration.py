@@ -1,4 +1,4 @@
-#! usr/bin/env python3
+#! usr/bin/env python 3
 
 
 import numpy as np
@@ -27,14 +27,14 @@ def transform_cal(transform_mat, transform_o_b):
     """Takes in the transform matrix from the arm(end effector to the base) and the initial "guess" transform matrix.
     returns the location of the end effector in the world frame."""
 
-    loc_inWorld = transform_o_b @ transform_mat @ np.transpose([0, 0, 0, 1])  # Puts the end effector location in the world frame
+    loc_inWorld = np.dot(transform_o_b, np.dot(transform_mat, np.transpose([0, 0, 0, 1])))  # Puts the end effector location in the world frame
 
     return loc_inWorld
 
 
 for k in range(1, 5):
 
-    with open(directory + '/arm_cal/TransformMatrix_' + str(k) + '.0.csv', newline='') as f:
+    with open(directory + '/arm_cal/TransformMatrix_' + str(k) + '.0.csv') as f:
         reader = csv.reader(f)
         for j, row in enumerate(reader):
             for i, col in enumerate(row):
